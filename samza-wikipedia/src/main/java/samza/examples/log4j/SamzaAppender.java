@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia;
+package samza.examples.log4j;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -27,7 +27,7 @@ import org.apache.log4j.spi.LoggingEvent;
 
 import java.util.Properties;
 
-public class KafkaAppender extends AppenderSkeleton {
+public class SamzaAppender extends AppenderSkeleton {
     private String brokerList;
     private String sourceType;
     private String source;

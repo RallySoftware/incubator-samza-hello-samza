@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia.task;
+package samza.examples.yammer.task;
 
 import org.apache.samza.system.IncomingMessageEnvelope;
 import org.apache.samza.system.OutgoingMessageEnvelope;
@@ -26,7 +26,6 @@ import org.apache.samza.system.SystemStreamPartition;
 import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
-import samza.examples.wikipedia.system.InfluxSystemProducer;
 
 public class YammerInfluxTask implements StreamTask {
     @Override

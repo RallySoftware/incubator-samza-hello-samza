@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia.task;
+package samza.examples.log4j.task;
 
 import org.apache.samza.system.IncomingMessageEnvelope;
 import org.apache.samza.system.OutgoingMessageEnvelope;
@@ -26,12 +26,12 @@ import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
 
-public class SplunkBridgeStreamTask implements StreamTask {
+public class Log4JStreamTask implements StreamTask {
     @Override
     public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) {
         String key = (String) envelope.getKey();
         String value = (String) envelope.getMessage();
-        SystemStream systemStream = new SystemStream("splunk", key);
+        SystemStream systemStream = new SystemStream("log4j", key);
         OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, key, value);
         collector.send(outgoingMessage);
     }

@@ -95,9 +95,6 @@ under the License.
                 <configuration>
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>samza.examples.wikipedia.SamzaTester</mainClass>
-                        </transformer>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                             <resource>log4j.properties</resource>
                             <file>resources/log4j.properties</file>

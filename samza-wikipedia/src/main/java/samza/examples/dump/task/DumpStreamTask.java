@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia.task;
+package samza.examples.dump.task;
 
 import org.apache.samza.system.IncomingMessageEnvelope;
 import org.apache.samza.task.MessageCollector;

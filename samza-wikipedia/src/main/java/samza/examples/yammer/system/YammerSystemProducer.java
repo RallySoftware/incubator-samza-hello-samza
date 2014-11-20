@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia.system;
+package samza.examples.yammer.system;
 
 import org.apache.samza.system.OutgoingMessageEnvelope;
 import org.apache.samza.system.SystemProducer;
@@ -27,11 +27,11 @@ import org.influxdb.dto.Serie;
 
 import java.util.concurrent.TimeUnit;
 
-public class InfluxSystemProducer implements SystemProducer {
+public class YammerSystemProducer implements SystemProducer {
     private InfluxDB influx;
     private String database;
 
-    public InfluxSystemProducer(String uri, String username, String password, String database) {
+    public YammerSystemProducer(String uri, String username, String password, String database) {
         influx = InfluxDBFactory.connect(uri, username, password);
         this.database = database;
     }

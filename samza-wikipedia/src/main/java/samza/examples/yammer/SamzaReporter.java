@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia;
+package samza.examples.yammer;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
@@ -28,11 +28,11 @@ import kafka.producer.ProducerConfig;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class KafkaReporter extends ScheduledReporter {
+public class SamzaReporter extends ScheduledReporter {
     private List<KeyedMessage> messages;
     private Producer producer;
 
-    public KafkaReporter(MetricRegistry registry,
+    public SamzaReporter(MetricRegistry registry,
                          String name,
                          MetricFilter filter,
                          TimeUnit rateUnit,

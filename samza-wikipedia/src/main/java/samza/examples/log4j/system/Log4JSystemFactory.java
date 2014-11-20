@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia.system;
+package samza.examples.log4j.system;
 
 import org.apache.samza.SamzaException;
 import org.apache.samza.config.Config;
@@ -28,23 +28,22 @@ import org.apache.samza.system.SystemFactory;
 import org.apache.samza.system.SystemProducer;
 import org.apache.samza.util.SinglePartitionWithoutOffsetsSystemAdmin;
 
-public class InfluxSystemFactory implements SystemFactory {
+public class Log4JSystemFactory implements SystemFactory {
     @Override
     public SystemConsumer getConsumer(String systemName, Config config, MetricsRegistry registry) {
-        throw new SamzaException("You can't consume from an Influx feed!");
+        throw new SamzaException("You can't consume from a Log4J feed!");
     }
 
     @Override
     public SystemProducer getProducer(String systemName, Config config, MetricsRegistry registry) {
-        String uri = config.get("systems." + systemName + ".uri");
-        String username = config.get("systems." + systemName + ".username");
-        String password = config.get("systems." + systemName + ".password");
-        String database = config.get("systems." + systemName + ".database");
-        return new InfluxSystemProducer(uri, username, password, database);
+        String host = config.get("systems." + systemName + ".host");
+        int port = config.getInt("systems." + systemName + ".port");
+        return new Log4JSystemProducer(host, port);
     }
 
     @Override
     public SystemAdmin getAdmin(String systemName, Config config) {
-        return new SinglePartitionWithoutOffsetsSystemAdmin();
+        SystemAdmin admin = new SinglePartitionWithoutOffsetsSystemAdmin();
+        return admin;
     }
 }

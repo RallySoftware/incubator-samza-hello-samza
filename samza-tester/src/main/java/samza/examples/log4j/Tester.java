@@ -17,32 +17,36 @@
  * under the License.
  */
 
-package samza.examples.wikipedia;
+package samza.examples.log4j;
 
-public class SamzaTester {
+public class Tester {
+
+    public static final int sleep = 50;
+
     public static void main(String... args) throws InterruptedException {
         int x = 0;
+        int sleep = Integer.getInteger("sleep", 0);
         org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger("samza.tester");
 
         while (true) {
             x++;
 
-            Thread.sleep(50);
+            Thread.sleep(sleep);
             logger.trace("This is trace message #" + x);
 
-            Thread.sleep(50);
+            Thread.sleep(sleep);
             logger.debug("This is debug message #" + x);
 
-            Thread.sleep(50);
+            Thread.sleep(sleep);
             logger.info("This is info message #" + x);
 
-            Thread.sleep(50);
+            Thread.sleep(sleep);
             logger.warn("This is warn message #" + x);
 
-            Thread.sleep(50);
+            Thread.sleep(sleep);
             logger.error("This is error message #" + x);
 
-            Thread.sleep(50);
+            Thread.sleep(sleep);
             logger.fatal("This is fatal message #" + x);
         }
     }

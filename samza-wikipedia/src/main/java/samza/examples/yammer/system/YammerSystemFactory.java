@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia.system;
+package samza.examples.yammer.system;
 
 import org.apache.samza.SamzaException;
 import org.apache.samza.config.Config;
@@ -28,22 +28,23 @@ import org.apache.samza.system.SystemFactory;
 import org.apache.samza.system.SystemProducer;
 import org.apache.samza.util.SinglePartitionWithoutOffsetsSystemAdmin;
 
-public class SplunkSystemFactory implements SystemFactory {
+public class YammerSystemFactory implements SystemFactory {
     @Override
     public SystemConsumer getConsumer(String systemName, Config config, MetricsRegistry registry) {
-        throw new SamzaException("You can't consume from a Splunk feed!");
+        throw new SamzaException("You can't consume from an Yammer feed!");
     }
 
     @Override
     public SystemProducer getProducer(String systemName, Config config, MetricsRegistry registry) {
-        String host = config.get("systems." + systemName + ".host");
-        int port = config.getInt("systems." + systemName + ".port");
-        return new SplunkSystemProducer(host, port);
+        String uri = config.get("systems." + systemName + ".uri");
+        String username = config.get("systems." + systemName + ".username");
+        String password = config.get("systems." + systemName + ".password");
+        String database = config.get("systems." + systemName + ".database");
+        return new YammerSystemProducer(uri, username, password, database);
     }
 
     @Override
     public SystemAdmin getAdmin(String systemName, Config config) {
-        SystemAdmin admin = new SinglePartitionWithoutOffsetsSystemAdmin();
-        return admin;
+        return new SinglePartitionWithoutOffsetsSystemAdmin();
     }
 }

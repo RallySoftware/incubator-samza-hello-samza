@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.wikipedia.system;
+package samza.examples.log4j.system;
 
 import org.apache.samza.system.OutgoingMessageEnvelope;
 import org.apache.samza.system.SystemProducer;
@@ -26,13 +26,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
-public class SplunkSystemProducer implements SystemProducer {
+public class Log4JSystemProducer implements SystemProducer {
     private String host;
     private int port;
     private Socket socket;
     private OutputStreamWriter writer;
 
-    public SplunkSystemProducer(String host, int port) {
+    public Log4JSystemProducer(String host, int port) {
         this.host = host;
         this.port = port;
     }
