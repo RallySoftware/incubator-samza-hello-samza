@@ -28,24 +28,22 @@ import org.apache.samza.system.SystemFactory;
 import org.apache.samza.system.SystemProducer;
 import org.apache.samza.util.SinglePartitionWithoutOffsetsSystemAdmin;
 
-public class WikipediaSystemFactory implements SystemFactory {
+public class SplunkSystemFactory implements SystemFactory {
     @Override
     public SystemConsumer getConsumer(String systemName, Config config, MetricsRegistry registry) {
-        String host = config.get("systems." + systemName + ".host");
-        int port = config.getInt("systems." + systemName + ".port");
-        WikipediaFeed feed = new WikipediaFeed(host, port);
-
-        return new WikipediaConsumer(systemName, feed, registry);
+        throw new SamzaException("You can't consume from a Splunk feed!");
     }
 
     @Override
     public SystemProducer getProducer(String systemName, Config config, MetricsRegistry registry) {
-        throw new SamzaException(
-                "You can't produce to a Wikipedia feed! How about making some edits to a Wiki, instead?");
+        String host = config.get("systems." + systemName + ".host");
+        int port = config.getInt("systems." + systemName + ".port");
+        return new SplunkSystemProducer(host, port);
     }
 
     @Override
     public SystemAdmin getAdmin(String systemName, Config config) {
-        return new SinglePartitionWithoutOffsetsSystemAdmin();
+        SystemAdmin admin = new SinglePartitionWithoutOffsetsSystemAdmin();
+        return admin;
     }
 }

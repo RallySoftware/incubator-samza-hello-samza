@@ -20,37 +20,23 @@
 package samza.examples.wikipedia.task;
 
 import org.apache.samza.system.IncomingMessageEnvelope;
-import org.apache.samza.system.OutgoingMessageEnvelope;
-import org.apache.samza.system.SystemStream;
 import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
-import samza.examples.wikipedia.system.WikipediaFeed.WikipediaFeedEvent;
 
-import java.util.Map;
-
-/**
- * This task is very simple. All it does is take messages that it receives, and
- * sends them to a Kafka topic called wikipedia-raw.
- */
-public class WikipediaFeedStreamTask implements StreamTask {
-    public WikipediaFeedStreamTask() {
-        System.err.format("Creating Wikipedia Feed StreamTask\n");
+public class DumpStreamTask implements StreamTask {
+    public DumpStreamTask() {
+        System.err.format("Creating Dump StreamTask\n");
         System.err.flush();
     }
 
-    private static final SystemStream OUTPUT_STREAM = new SystemStream("kafka", "wikipedia-raw");
-
     @Override
-    public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) {
-        System.err.format("Wikipedia Feed StreamTask:\n");
+    public void process(final IncomingMessageEnvelope envelope, final MessageCollector collector, final TaskCoordinator coordinator) throws Exception {
+        System.err.format("Dump StreamTask:\n");
         System.err.format("- Incoming message: %s\n", envelope);
         System.err.format("- Collector: %s\n", collector);
         System.err.format("- Task Coordinator: %s\n", coordinator);
         System.err.format("\n");
         System.err.flush();
-
-        Map<String, Object> outgoingMap = WikipediaFeedEvent.toMap((WikipediaFeedEvent) envelope.getMessage());
-        collector.send(new OutgoingMessageEnvelope(OUTPUT_STREAM, outgoingMap));
     }
 }

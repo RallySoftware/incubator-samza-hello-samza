@@ -27,8 +27,8 @@ under the License.
         <version>0.7.0</version>
     </parent>
 
-    <artifactId>samza-wikipedia</artifactId>
-    <name>Samza Wikipedia Example</name>
+    <artifactId>samza-tester</artifactId>
+    <name>Samza Tester</name>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -72,6 +72,11 @@ under the License.
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
+        <dependency>
+            <groupId>samza</groupId>
+            <artifactId>samza-wikipedia</artifactId>
+            <version>0.7.0</version>
+        </dependency>
     </dependencies>
 
     <licenses>
@@ -81,5 +86,33 @@ under the License.
             <distribution>repo</distribution>
         </license>
     </licenses>
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.0</version>
+                <configuration>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <mainClass>samza.examples.wikipedia.SamzaTester</mainClass>
+                        </transformer>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                            <resource>log4j.properties</resource>
+                            <file>resources/log4j.properties</file>
+                        </transformer>
+                    </transformers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -25,32 +25,14 @@ import org.apache.samza.system.SystemStream;
 import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
-import samza.examples.wikipedia.system.WikipediaFeed.WikipediaFeedEvent;
 
-import java.util.Map;
-
-/**
- * This task is very simple. All it does is take messages that it receives, and
- * sends them to a Kafka topic called wikipedia-raw.
- */
-public class WikipediaFeedStreamTask implements StreamTask {
-    public WikipediaFeedStreamTask() {
-        System.err.format("Creating Wikipedia Feed StreamTask\n");
-        System.err.flush();
-    }
-
-    private static final SystemStream OUTPUT_STREAM = new SystemStream("kafka", "wikipedia-raw");
-
+public class SplunkBridgeStreamTask implements StreamTask {
     @Override
     public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) {
-        System.err.format("Wikipedia Feed StreamTask:\n");
-        System.err.format("- Incoming message: %s\n", envelope);
-        System.err.format("- Collector: %s\n", collector);
-        System.err.format("- Task Coordinator: %s\n", coordinator);
-        System.err.format("\n");
-        System.err.flush();
-
-        Map<String, Object> outgoingMap = WikipediaFeedEvent.toMap((WikipediaFeedEvent) envelope.getMessage());
-        collector.send(new OutgoingMessageEnvelope(OUTPUT_STREAM, outgoingMap));
+        String key = (String) envelope.getKey();
+        String value = (String) envelope.getMessage();
+        SystemStream systemStream = new SystemStream("splunk", key);
+        OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, key, value);
+        collector.send(outgoingMessage);
     }
 }
