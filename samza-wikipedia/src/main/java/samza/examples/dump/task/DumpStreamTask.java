@@ -33,9 +33,15 @@ public class DumpStreamTask implements StreamTask {
     @Override
     public void process(final IncomingMessageEnvelope envelope, final MessageCollector collector, final TaskCoordinator coordinator) throws Exception {
         System.err.format("Dump StreamTask:\n");
-        System.err.format("- Incoming message: %s\n", envelope);
         System.err.format("- Collector: %s\n", collector);
         System.err.format("- Task Coordinator: %s\n", coordinator);
+        System.err.format("- Incoming message:\n");
+        System.err.format("  - System: %s\n", envelope.getSystemStreamPartition().getSystem());
+        System.err.format("  - Stream: %s\n", envelope.getSystemStreamPartition().getStream());
+        System.err.format("  - Partition: %s\n", envelope.getSystemStreamPartition().getPartition());
+        System.err.format("  - Offset: %s\n", envelope.getOffset());
+        System.err.format("  - Key: %s\n", envelope.getKey());
+        System.err.format("  - Value: %s\n", envelope.getMessage());
         System.err.format("\n");
         System.err.flush();
     }

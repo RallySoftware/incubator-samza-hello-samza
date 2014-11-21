@@ -52,12 +52,12 @@
             <filtered>true</filtered>
         </file>
         <file>
-            <source>${basedir}/src/main/config/splunk-bridge.properties</source>
+            <source>${basedir}/src/main/config/log4j.properties</source>
             <outputDirectory>config</outputDirectory>
             <filtered>true</filtered>
         </file>
         <file>
-            <source>${basedir}/src/main/config/yammer-influx.properties</source>
+            <source>${basedir}/src/main/config/yammer.properties</source>
             <outputDirectory>config</outputDirectory>
             <filtered>true</filtered>
         </file>

@@ -24,13 +24,21 @@ import com.codahale.metrics.Timer;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.collect.Maps.newHashMap;
+import static samza.examples.yammer.task.YammerStreamTask.*;
+import static samza.examples.yammer.task.YammerStreamTask.NAME;
+import static samza.examples.yammer.task.YammerStreamTask.TYPE;
+
 public class SamzaReporter extends ScheduledReporter {
-    private List<KeyedMessage> messages;
-    private Producer producer;
+    private ProducerConfig producerConfig;
+    private List<KeyedMessage<Map<String, String>, Map<String, Object>>> messages;
+    private Producer<Map<String, String>, Map<String, Object>> producer;
 
     public SamzaReporter(MetricRegistry registry,
                          String name,
@@ -40,9 +48,11 @@ public class SamzaReporter extends ScheduledReporter {
                          String brokerList) {
         super(registry, name, filter, rateUnit, durationUnit);
         Properties producerProperties = new Properties();
-
-        ProducerConfig producerConfig = new ProducerConfig(producerProperties);
-        producer = new Producer(producerConfig);
+        producerProperties.put("metadata.broker.list", brokerList);
+        producerProperties.put("serializer.class", "kafka.serializer.JsonEncoder");
+        producerProperties.put("key.serializer.class", "kafka.serializer.JsonEncoder");
+        producerProperties.put("request.required.acks", "0");
+        producerConfig = new ProducerConfig(producerProperties);
     }
 
     @Override
@@ -51,80 +61,125 @@ public class SamzaReporter extends ScheduledReporter {
                        SortedMap<String, Histogram> histograms,
                        SortedMap<String, Meter> meters,
                        SortedMap<String, Timer> timers) {
-        messages = new ArrayList<KeyedMessage>();
+        Map<String, String> key;
+        Map<String, Object> value;
+        DateTime timestamp = DateTime.now();
+        messages = new ArrayList<KeyedMessage<Map<String, String>, Map<String, Object>>>();
 
         for (Map.Entry<String, Gauge> entry : gauges.entrySet()) {
-            reportGauge(entry.getKey(), entry.getValue());
+            key = newHashMap();
+            key.put(NAME, entry.getKey());
+            key.put(TYPE, GAUGE);
+
+            value = newHashMap();
+            report(entry.getValue(), value);
+            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+
+            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
         }
 
         for (Map.Entry<String, Counter> entry : counters.entrySet()) {
-            reportCounter(entry.getKey(), entry.getValue());
+            key = newHashMap();
+            key.put(NAME, entry.getKey());
+            key.put(TYPE, COUNTER);
+
+            value = newHashMap();
+            report(entry.getValue(), value);
+            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+
+            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
         }
 
         for (Map.Entry<String, Histogram> entry : histograms.entrySet()) {
-            reportHistogram(entry.getKey(), entry.getValue());
+            key = newHashMap();
+            key.put(NAME, entry.getKey());
+            key.put(TYPE, HISTOGRAM);
+
+            value = newHashMap();
+            report(entry.getValue(), value);
+            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+
+            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
         }
 
         for (Map.Entry<String, Meter> entry : meters.entrySet()) {
-            reportMeter(entry.getKey(), entry.getValue());
+            key = newHashMap();
+            key.put(NAME, entry.getKey());
+            key.put(TYPE, METER);
+
+            value = newHashMap();
+            report(entry.getValue(), value);
+            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+
+            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
         }
 
         for (Map.Entry<String, Timer> entry : timers.entrySet()) {
-            reportTimer(entry.getKey(), entry.getValue());
+            key = newHashMap();
+            key.put(NAME, entry.getKey());
+            key.put(TYPE, TIMER);
+
+            value = newHashMap();
+            report(entry.getValue(), value);
+            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+
+            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
         }
 
-        producer.send(messages);
+        getProducer().send(messages);
     }
 
-    private void reportGauge(String name, Gauge metric) {
-
+    private void report(Gauge metric, Map<String, Object> json) {
+        json.put(VALUE, metric.getValue());
     }
 
 
-    private void reportCounter(String name, Counter metric) {
-        send("yammer-counter", name, metric.getCount());
+    private void report(Counter metric, Map<String, Object> json) {
+        json.put(COUNT, metric.getCount());
     }
 
-    private void reportHistogram(String name, Histogram metric) {
+    private void report(Histogram metric, Map<String, Object> json) {
         Snapshot snapshot = metric.getSnapshot();
-
-        send("yammer-histogram", name + ".count", metric.getCount());
-        send("yammer-histogram", name + ".max", snapshot.getMax());
-        send("yammer-histogram", name + ".mean", snapshot.getMean());
-        send("yammer-histogram", name + ".min", snapshot.getMin());
-        send("yammer-histogram", name + ".stddev", snapshot.getStdDev());
-        send("yammer-histogram", name + ".p50", snapshot.getMedian());
-        send("yammer-histogram", name + ".p75", snapshot.get75thPercentile());
-        send("yammer-histogram", name + ".p95", snapshot.get95thPercentile());
-        send("yammer-histogram", name + ".p98", snapshot.get98thPercentile());
-        send("yammer-histogram", name + ".p99", snapshot.get99thPercentile());
-        send("yammer-histogram", name + ".p999", snapshot.get999thPercentile());
+        json.put(COUNT, metric.getCount());
+        json.put(MAX, snapshot.getMax());
+        json.put(MEAN, snapshot.getMean());
+        json.put(MIN, snapshot.getMin());
+        json.put(STDDEV, snapshot.getStdDev());
+        json.put(P_50, snapshot.getMedian());
+        json.put(P_75, snapshot.get75thPercentile());
+        json.put(P_95, snapshot.get95thPercentile());
+        json.put(P_98, snapshot.get98thPercentile());
+        json.put(P_99, snapshot.get99thPercentile());
+        json.put(P_999, snapshot.get999thPercentile());
     }
 
-    private void reportMeter(String name, Meter metric) {
-        send("yammer-meter", name + ".count", metric.getCount());
-        send("yammer-meter", name + ".one-minute-rate", metric.getOneMinuteRate());
-        send("yammer-meter", name + ".five-minute-rate", metric.getFiveMinuteRate());
-        send("yammer-meter", name + ".fifteen-minute-rate", metric.getFifteenMinuteRate());
-        send("yammer-meter", name + ".mean-rate", metric.getMeanRate());
+    private void report(Meter metric, Map<String, Object> json) {
+        json.put(COUNT, metric.getCount());
+        json.put(ONE_MINUTE_RATE, metric.getOneMinuteRate());
+        json.put(FIVE_MINUTE_RATE, metric.getFiveMinuteRate());
+        json.put(FIFTEEN_MINUTE_RATE, metric.getFifteenMinuteRate());
+        json.put(MEAN_RATE, metric.getMeanRate());
     }
 
-    private void reportTimer(String name, Timer metric) {
+    private void report(Timer metric, Map<String, Object> json) {
         Snapshot snapshot = metric.getSnapshot();
-
-        send("yammer-timer", name + ".max", snapshot.getMax());
-        send("yammer-timer", name + ".min", snapshot.getMin());
-        send("yammer-timer", name + ".mean", snapshot.getMean());
-        send("yammer-timer", name + ".stddev", snapshot.getStdDev());
-        send("yammer-timer", name + ".p50", snapshot.getMedian());
-        send("yammer-timer", name + ".p75", snapshot.get75thPercentile());
-        send("yammer-timer", name + ".p95", snapshot.get95thPercentile());
-        send("yammer-timer", name + ".p98", snapshot.get98thPercentile());
-        send("yammer-timer", name + ".p99", snapshot.get99thPercentile());
-        send("yammer-timer", name + ".p999", snapshot.get999thPercentile());
+        json.put(MAX, snapshot.getMax());
+        json.put(MIN, snapshot.getMin());
+        json.put(MEAN, snapshot.getMean());
+        json.put(STDDEV, snapshot.getStdDev());
+        json.put(P_50, snapshot.getMedian());
+        json.put(P_75, snapshot.get75thPercentile());
+        json.put(P_95, snapshot.get95thPercentile());
+        json.put(P_98, snapshot.get98thPercentile());
+        json.put(P_99, snapshot.get99thPercentile());
+        json.put(P_999, snapshot.get999thPercentile());
     }
 
-    private <T> void send(String topic, String name, T value) {
-        messages.add(new KeyedMessage(topic, name, value));
+    private Producer<Map<String, String>, Map<String, Object>> getProducer() {
+        if (producer == null) {
+            producer = new Producer<Map<String, String>, Map<String, Object>>(producerConfig);
+        }
+
+        return producer;
     }
 }

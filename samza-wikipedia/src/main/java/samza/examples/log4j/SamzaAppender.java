@@ -24,8 +24,14 @@ import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 
+import java.util.Map;
 import java.util.Properties;
+
+import static com.google.common.collect.Maps.newHashMap;
+import static samza.examples.log4j.task.Log4JStreamTask.*;
 
 public class SamzaAppender extends AppenderSkeleton {
     private String brokerList;
@@ -33,7 +39,8 @@ public class SamzaAppender extends AppenderSkeleton {
     private String source;
     private String host;
 
-    private Producer<String, String> producer;
+    private Producer<Map<String, String>, String> producer;
+    private ProducerConfig producerConfig;
 
     public String getBrokerList() {
         return brokerList;
@@ -78,11 +85,10 @@ public class SamzaAppender extends AppenderSkeleton {
             Properties producerProperties = new Properties();
             producerProperties.put("metadata.broker.list", brokerList);
             producerProperties.put("serializer.class", "kafka.serializer.StringEncoder");
-            producerProperties.put("key.serializer.class", "kafka.serializer.StringEncoder");
+            producerProperties.put("key.serializer.class", "kafka.serializer.JsonEncoder");
             producerProperties.put("request.required.acks", "0");
 
-            ProducerConfig producerConfig = new ProducerConfig(producerProperties);
-            producer = new Producer<String, String>(producerConfig);
+            producerConfig = new ProducerConfig(producerProperties);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -91,14 +97,28 @@ public class SamzaAppender extends AppenderSkeleton {
 
     @Override
     protected synchronized void append(LoggingEvent event) {
-        String key = String.format("SPLUNK-MESSAGE: sourcetype=%s source=%s host=%s", sourceType, source, host);
+        DateTime timestamp = DateTime.now();
+        Map<String, String> key = newHashMap();
+        key.put(SOURCETYPE, sourceType);
+        key.put(SOURCE, source);
+        key.put(HOST, host);
+        key.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
         String value = layout.format(event);
-        KeyedMessage<String, String> message = new KeyedMessage<String, String>("application-logs", key, value);
-        producer.send(message);
+        KeyedMessage<Map<String, String>, String> message = new KeyedMessage<Map<String, String>, String>(
+                TOPIC, key, value);
+        getProducer().send(message);
     }
 
     @Override
     public synchronized void close() {
         producer.close();
+    }
+
+    private Producer<Map<String, String>, String> getProducer() {
+        if (producer == null) {
+            producer = new Producer<Map<String, String>, String>(producerConfig);
+        }
+
+        return producer;
     }
 }

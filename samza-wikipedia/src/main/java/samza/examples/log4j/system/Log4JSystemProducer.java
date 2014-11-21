@@ -25,6 +25,7 @@ import org.apache.samza.system.SystemProducer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.Map;
 
 public class Log4JSystemProducer implements SystemProducer {
     private String host;
@@ -40,7 +41,7 @@ public class Log4JSystemProducer implements SystemProducer {
     @Override
     public void start() {
         try {
-            createSocket();
+            open();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,9 +50,7 @@ public class Log4JSystemProducer implements SystemProducer {
     @Override
     public void stop() {
         try {
-            if (writer != null) {
-                writer.close();
-            }
+            close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -59,12 +58,26 @@ public class Log4JSystemProducer implements SystemProducer {
 
     @Override
     public void send(String source, OutgoingMessageEnvelope envelope) {
-        String data = String.format("%s\n%s\n---\n", envelope.getKey(), envelope.getMessage());
+        StringBuilder data = new StringBuilder();
+        data.append("SPLUNK-MESSAGE:");
+
+        Map<String, String> key = (Map<String, String>) envelope.getKey();
+        for (Map.Entry entry : key.entrySet()) {
+            data.append(" ");
+            data.append(entry.getKey());
+            data.append("=\"");
+            data.append(entry.getValue());
+            data.append("\"");
+        }
+
+        data.append("\n");
+        data.append(envelope.getMessage());
+        data.append("---\n");
+
         try {
-            if (writer != null) {
-                writer.write(data);
-                writer.flush();
-            }
+            OutputStreamWriter writer = getWriter();
+            writer.write(data.toString());
+            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,16 +90,30 @@ public class Log4JSystemProducer implements SystemProducer {
     @Override
     public void flush(String source) {
         try {
-            if (writer != null) {
-                writer.flush();
-            }
+            getWriter().flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void createSocket() throws IOException {
+    private OutputStreamWriter getWriter() throws IOException {
+        if (socket == null || writer == null || socket.isClosed()) {
+            open();
+        }
+
+        return writer;
+    }
+
+    private void open() throws IOException {
+        close();
         socket = new Socket(host, port);
         writer = new OutputStreamWriter(socket.getOutputStream());
+    }
+
+    private void close() throws IOException {
+        if (socket != null) {
+            writer.flush();
+            socket.close();
+        }
     }
 }

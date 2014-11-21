@@ -40,7 +40,7 @@ public class YammerSystemFactory implements SystemFactory {
         String username = config.get("systems." + systemName + ".username");
         String password = config.get("systems." + systemName + ".password");
         String database = config.get("systems." + systemName + ".database");
-        return new YammerSystemProducer(uri, username, password, database);
+        return new YammerSystemProducer(uri, username, password, database, 1000);
     }
 
     @Override

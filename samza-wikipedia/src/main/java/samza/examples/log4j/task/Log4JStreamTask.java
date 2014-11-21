@@ -26,13 +26,20 @@ import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
 
+import java.util.Map;
+
 public class Log4JStreamTask implements StreamTask {
+    public static final String TOPIC = "application-logs";
+
+    public static final String SOURCETYPE = "sourcetype";
+    public static final String SOURCE = "source";
+    public static final String HOST = "host";
+    public static final String TIMESTAMP = "timestamp";
+
     @Override
     public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) {
-        String key = (String) envelope.getKey();
-        String value = (String) envelope.getMessage();
-        SystemStream systemStream = new SystemStream("log4j", key);
-        OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, key, value);
+        SystemStream systemStream = new SystemStream("log4j", "all");
+        OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, envelope.getKey(), envelope.getMessage());
         collector.send(outgoingMessage);
     }
 }

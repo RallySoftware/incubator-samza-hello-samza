@@ -19,21 +19,44 @@
 
 package samza.examples.yammer.system;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.samza.system.OutgoingMessageEnvelope;
 import org.apache.samza.system.SystemProducer;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Serie;
+import org.influxdb.dto.Serie.Builder;
+import org.joda.time.format.ISODateTimeFormat;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
+import static samza.examples.yammer.task.YammerStreamTask.NAME;
+import static samza.examples.yammer.task.YammerStreamTask.TIMESTAMP;
+
 public class YammerSystemProducer implements SystemProducer {
-    private InfluxDB influx;
+    private String uri;
+    private String username;
+    private String password;
     private String database;
 
-    public YammerSystemProducer(String uri, String username, String password, String database) {
-        influx = InfluxDBFactory.connect(uri, username, password);
+    private InfluxDB influx;
+
+    private List<OutgoingMessageEnvelope> buffer;
+    private int bufferSize;
+
+    public YammerSystemProducer(String uri, String username, String password, String database, int bufferSize) {
+        this.uri = uri;
+        this.username = username;
+        this.password = password;
         this.database = database;
+        this.bufferSize = bufferSize;
+
+        buffer = newArrayList();
     }
 
     @Override
@@ -46,16 +69,65 @@ public class YammerSystemProducer implements SystemProducer {
 
     @Override
     public void register(String source) {
+
     }
 
     @Override
     public void send(String source, OutgoingMessageEnvelope envelope) {
-        String name = (String) envelope.getKey();
-        Serie series = new Serie.Builder(name).build();
-        influx.write(database, TimeUnit.MILLISECONDS, series);
+        buffer.add(envelope);
+
+        if (buffer.size() > bufferSize) {
+            flush(source);
+        }
     }
 
     @Override
     public void flush(String source) {
+        Map<String, List<String>> columns = newHashMap();
+        Map<String, Serie.Builder> serieBuilders = newHashMap();
+
+        for (OutgoingMessageEnvelope envelope : buffer) {
+            Map<String, String> key = (Map<String, String>) envelope.getKey();
+            Map<String, Object> value = (Map<String, Object>) envelope.getMessage();
+
+            Serie.Builder builder = serieBuilders.get(key.get(NAME));
+            List<String> columnNames = columns.get(key.get(NAME));
+            if (builder == null) {
+                builder = new Serie.Builder(key.get(NAME));
+                columnNames = newArrayList(value.keySet());
+
+                serieBuilders.put(key.get(NAME), builder);
+                columns.put(key.get(NAME), columnNames);
+
+                builder.columns(columnNames.toArray(new String[columnNames.size()]));
+            }
+
+            List<Object> values = newArrayList();
+            for (String column : columnNames) {
+                if (TIMESTAMP.equals(column)) {
+                    values.add(ISODateTimeFormat.dateTime().parseDateTime((String) value.get(column)).toInstant().getMillis());
+                } else {
+                    values.add(value.get(column));
+                }
+            }
+            builder.values(values);
+        }
+
+        List<Serie> series = newArrayList();
+        for (Serie.Builder builder : serieBuilders.values()) {
+            series.add(builder.build());
+        }
+        getDatabase().write(database, TimeUnit.MILLISECONDS, series.toArray(new Serie[series.size()]));
+
+        buffer.clear();
+    }
+
+    private InfluxDB getDatabase() {
+        if (influx == null) {
+            influx = InfluxDBFactory.connect(uri, username, password);
+            influx.createDatabase(database);
+        }
+
+        return influx;
     }
 }
