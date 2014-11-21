@@ -11,7 +11,7 @@ public class Tester {
         final Random random = new Random();
 
         MetricRegistry metrics = new MetricRegistry();
-        SamzaReporter reporter = new SamzaReporter(metrics, "samza-tester", null, TimeUnit.SECONDS, TimeUnit.MILLISECONDS, "localhost:9092");
+        SamzaReporter reporter = SamzaReporter.forRegistry(metrics).named("samza-tester").withBrokerList("localhost:9092").build();
         reporter.start(15, TimeUnit.SECONDS);
 
         metrics.register("test-gauge", new Gauge<Integer>() {

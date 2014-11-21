@@ -40,6 +40,55 @@ public class SamzaReporter extends ScheduledReporter {
     private List<KeyedMessage<Map<String, String>, Map<String, Object>>> messages;
     private Producer<Map<String, String>, Map<String, Object>> producer;
 
+    public static Builder forRegistry(MetricRegistry registry) {
+        return new Builder(registry);
+    }
+
+    public static class Builder {
+        private final MetricRegistry registry;
+        private TimeUnit rateUnit;
+        private TimeUnit durationUnit;
+        private MetricFilter filter;
+        private String brokerList;
+        private String name;
+
+        private Builder(MetricRegistry registry) {
+            this.registry = registry;
+            this.rateUnit = TimeUnit.SECONDS;
+            this.durationUnit = TimeUnit.MILLISECONDS;
+            this.filter = MetricFilter.ALL;
+        }
+
+        public Builder convertRatesTo(TimeUnit rateUnit) {
+            this.rateUnit = rateUnit;
+            return this;
+        }
+
+        public Builder convertDurationsTo(TimeUnit durationUnit) {
+            this.durationUnit = durationUnit;
+            return this;
+        }
+
+        public Builder filter(MetricFilter filter) {
+            this.filter = filter;
+            return this;
+        }
+
+        public Builder withBrokerList(String brokerList) {
+            this.brokerList = brokerList;
+            return this;
+        }
+
+        public Builder named(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public SamzaReporter build() {
+            return new SamzaReporter(registry, name, filter, rateUnit, durationUnit, brokerList);
+        }
+    }
+
     public SamzaReporter(MetricRegistry registry,
                          String name,
                          MetricFilter filter,
@@ -47,6 +96,10 @@ public class SamzaReporter extends ScheduledReporter {
                          TimeUnit durationUnit,
                          String brokerList) {
         super(registry, name, filter, rateUnit, durationUnit);
+
+        System.err.format("Creating Yammer Reporter\n");
+        System.err.flush();
+
         Properties producerProperties = new Properties();
         producerProperties.put("metadata.broker.list", brokerList);
         producerProperties.put("serializer.class", "kafka.serializer.JsonEncoder");
@@ -61,6 +114,10 @@ public class SamzaReporter extends ScheduledReporter {
                        SortedMap<String, Histogram> histograms,
                        SortedMap<String, Meter> meters,
                        SortedMap<String, Timer> timers) {
+        try {
+        System.err.format("Yammer Reporter reporting\n");
+        System.err.flush();
+
         Map<String, String> key;
         Map<String, Object> value;
         DateTime timestamp = DateTime.now();
@@ -126,7 +183,13 @@ public class SamzaReporter extends ScheduledReporter {
             messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
         }
 
+        System.err.format("Metrics: %s\n", messages);
+        System.err.flush();
+
         getProducer().send(messages);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void report(Gauge metric, Map<String, Object> json) {

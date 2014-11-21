@@ -31,6 +31,8 @@ import org.apache.samza.util.SinglePartitionWithoutOffsetsSystemAdmin;
 public class YammerSystemFactory implements SystemFactory {
     @Override
     public SystemConsumer getConsumer(String systemName, Config config, MetricsRegistry registry) {
+        System.err.format("Trying to get a %s consumer\n", systemName);
+        System.err.flush();
         throw new SamzaException("You can't consume from an Yammer feed!");
     }
 
@@ -40,11 +42,15 @@ public class YammerSystemFactory implements SystemFactory {
         String username = config.get("systems." + systemName + ".username");
         String password = config.get("systems." + systemName + ".password");
         String database = config.get("systems." + systemName + ".database");
-        return new YammerSystemProducer(uri, username, password, database, 1000);
+        System.err.format("Trying to get a %s producer with config %s\n", systemName, config);
+        System.err.flush();
+        return new YammerSystemProducer(uri, username, password, database, 10);
     }
 
     @Override
     public SystemAdmin getAdmin(String systemName, Config config) {
+        System.err.format("Trying to get a %s admin\n", systemName);
+        System.err.flush();
         return new SinglePartitionWithoutOffsetsSystemAdmin();
     }
 }

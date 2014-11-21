@@ -1,10 +1,14 @@
 package kafka.serializer;
 
+import kafka.utils.VerifiableProperties;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 
 public class JsonEncoder implements Encoder<Object> {
+    public JsonEncoder(VerifiableProperties properties) {
+    }
+
     @Override
     public byte[] toBytes(final Object t) {
         ObjectMapper objectMapper = new ObjectMapper();

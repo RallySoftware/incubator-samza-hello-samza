@@ -54,9 +54,13 @@ public class YammerStreamTask implements StreamTask {
     public static final String MEAN_RATE = "mean-rate";
     public static final String TOPIC = "yammer";
     public static final String TIMESTAMP = "timestamp";
+    public static final String TIME = "time";
 
     @Override
     public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) {
+        System.err.format("Yammer StreamTask handing message %s\n", envelope);
+        System.err.flush();
+
         Map<String, String> key = (Map<String, String>) envelope.getKey();
         SystemStream systemStream = new SystemStream("yammer", key.get(TYPE));
         OutgoingMessageEnvelope outgoingMessageEnvelope = new OutgoingMessageEnvelope(systemStream,
