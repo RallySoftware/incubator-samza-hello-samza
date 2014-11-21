@@ -121,6 +121,7 @@ under the License.
     <modules>
         <module>samza-job-package</module>
         <module>samza-wikipedia</module>
+        <module>samza-tester</module>
     </modules>
 
     <developers>

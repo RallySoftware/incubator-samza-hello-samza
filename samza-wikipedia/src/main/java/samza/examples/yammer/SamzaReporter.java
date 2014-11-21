@@ -25,15 +25,12 @@ import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static samza.examples.yammer.task.YammerStreamTask.*;
-import static samza.examples.yammer.task.YammerStreamTask.NAME;
-import static samza.examples.yammer.task.YammerStreamTask.TYPE;
 
 public class SamzaReporter extends ScheduledReporter {
     private ProducerConfig producerConfig;
@@ -115,78 +112,72 @@ public class SamzaReporter extends ScheduledReporter {
                        SortedMap<String, Meter> meters,
                        SortedMap<String, Timer> timers) {
         try {
-        System.err.format("Yammer Reporter reporting\n");
-        System.err.flush();
+            Map<String, String> key;
+            Map<String, Object> value;
+            DateTime timestamp = DateTime.now();
+            messages = new ArrayList<KeyedMessage<Map<String, String>, Map<String, Object>>>();
 
-        Map<String, String> key;
-        Map<String, Object> value;
-        DateTime timestamp = DateTime.now();
-        messages = new ArrayList<KeyedMessage<Map<String, String>, Map<String, Object>>>();
+            for (Map.Entry<String, Gauge> entry : gauges.entrySet()) {
+                key = newHashMap();
+                key.put(NAME, entry.getKey());
+                key.put(TYPE, GAUGE);
 
-        for (Map.Entry<String, Gauge> entry : gauges.entrySet()) {
-            key = newHashMap();
-            key.put(NAME, entry.getKey());
-            key.put(TYPE, GAUGE);
+                value = newHashMap();
+                report(entry.getValue(), value);
+                value.put(TIME, timestamp.toInstant().getMillis());
 
-            value = newHashMap();
-            report(entry.getValue(), value);
-            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+            }
 
-            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
-        }
+            for (Map.Entry<String, Counter> entry : counters.entrySet()) {
+                key = newHashMap();
+                key.put(NAME, entry.getKey());
+                key.put(TYPE, COUNTER);
 
-        for (Map.Entry<String, Counter> entry : counters.entrySet()) {
-            key = newHashMap();
-            key.put(NAME, entry.getKey());
-            key.put(TYPE, COUNTER);
+                value = newHashMap();
+                report(entry.getValue(), value);
+                value.put(TIME, timestamp.toInstant().getMillis());
 
-            value = newHashMap();
-            report(entry.getValue(), value);
-            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+            }
 
-            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
-        }
+            for (Map.Entry<String, Histogram> entry : histograms.entrySet()) {
+                key = newHashMap();
+                key.put(NAME, entry.getKey());
+                key.put(TYPE, HISTOGRAM);
 
-        for (Map.Entry<String, Histogram> entry : histograms.entrySet()) {
-            key = newHashMap();
-            key.put(NAME, entry.getKey());
-            key.put(TYPE, HISTOGRAM);
+                value = newHashMap();
+                report(entry.getValue(), value);
+                value.put(TIME, timestamp.toInstant().getMillis());
 
-            value = newHashMap();
-            report(entry.getValue(), value);
-            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+            }
 
-            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
-        }
+            for (Map.Entry<String, Meter> entry : meters.entrySet()) {
+                key = newHashMap();
+                key.put(NAME, entry.getKey());
+                key.put(TYPE, METER);
 
-        for (Map.Entry<String, Meter> entry : meters.entrySet()) {
-            key = newHashMap();
-            key.put(NAME, entry.getKey());
-            key.put(TYPE, METER);
+                value = newHashMap();
+                report(entry.getValue(), value);
+                value.put(TIME, timestamp.toInstant().getMillis());
 
-            value = newHashMap();
-            report(entry.getValue(), value);
-            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+            }
 
-            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
-        }
+            for (Map.Entry<String, Timer> entry : timers.entrySet()) {
+                key = newHashMap();
+                key.put(NAME, entry.getKey());
+                key.put(TYPE, TIMER);
 
-        for (Map.Entry<String, Timer> entry : timers.entrySet()) {
-            key = newHashMap();
-            key.put(NAME, entry.getKey());
-            key.put(TYPE, TIMER);
+                value = newHashMap();
+                report(entry.getValue(), value);
+                value.put(TIME, timestamp.toInstant().getMillis());
 
-            value = newHashMap();
-            report(entry.getValue(), value);
-            value.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
+                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+            }
 
-            messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
-        }
-
-        System.err.format("Metrics: %s\n", messages);
-        System.err.flush();
-
-        getProducer().send(messages);
+            getProducer().send(messages);
         } catch (Exception e) {
             e.printStackTrace();
         }

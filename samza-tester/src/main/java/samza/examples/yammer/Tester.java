@@ -12,7 +12,7 @@ public class Tester {
 
         MetricRegistry metrics = new MetricRegistry();
         SamzaReporter reporter = SamzaReporter.forRegistry(metrics).named("samza-tester").withBrokerList("localhost:9092").build();
-        reporter.start(15, TimeUnit.SECONDS);
+        reporter.start(500, TimeUnit.MILLISECONDS);
 
         metrics.register("test-gauge", new Gauge<Integer>() {
             @Override
