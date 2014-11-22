@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.log4j.system;
+package samza.examples.splunk.system;
 
 import org.apache.samza.SamzaException;
 import org.apache.samza.config.Config;
@@ -28,7 +28,7 @@ import org.apache.samza.system.SystemFactory;
 import org.apache.samza.system.SystemProducer;
 import org.apache.samza.util.SinglePartitionWithoutOffsetsSystemAdmin;
 
-public class Log4JSystemFactory implements SystemFactory {
+public class SplunkSystemFactory implements SystemFactory {
     @Override
     public SystemConsumer getConsumer(String systemName, Config config, MetricsRegistry registry) {
         throw new SamzaException("You can't consume from a Log4J feed!");
@@ -38,7 +38,7 @@ public class Log4JSystemFactory implements SystemFactory {
     public SystemProducer getProducer(String systemName, Config config, MetricsRegistry registry) {
         String host = config.get("systems." + systemName + ".host");
         int port = config.getInt("systems." + systemName + ".port");
-        return new Log4JSystemProducer(host, port);
+        return new SplunkSystemProducer(host, port);
     }
 
     @Override

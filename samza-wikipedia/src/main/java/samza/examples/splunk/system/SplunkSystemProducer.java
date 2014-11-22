@@ -17,23 +17,29 @@
  * under the License.
  */
 
-package samza.examples.log4j.system;
+package samza.examples.splunk.system;
 
 import org.apache.samza.system.OutgoingMessageEnvelope;
 import org.apache.samza.system.SystemProducer;
+import org.joda.time.format.ISODateTimeFormat;
+import samza.examples.splunk.SplunkKey;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.Map;
 
-public class Log4JSystemProducer implements SystemProducer {
+public class SplunkSystemProducer implements SystemProducer {
+    public static final String TIMESTAMP = "timestamp";
+    public static final String HOST = "host";
+    public static final String SOURCE = "source";
+    public static final String SOURCETYPE = "sourcetype";
     private String host;
     private int port;
     private Socket socket;
     private OutputStreamWriter writer;
 
-    public Log4JSystemProducer(String host, int port) {
+    public SplunkSystemProducer(String host, int port) {
         this.host = host;
         this.port = port;
     }
@@ -58,29 +64,36 @@ public class Log4JSystemProducer implements SystemProducer {
 
     @Override
     public void send(String source, OutgoingMessageEnvelope envelope) {
-        StringBuilder data = new StringBuilder();
-        data.append("SPLUNK-MESSAGE:");
+        SplunkKey key = (SplunkKey) envelope.getKey();
+        String message = (String) envelope.getMessage();
 
-        Map<String, String> key = (Map<String, String>) envelope.getKey();
-        for (Map.Entry entry : key.entrySet()) {
-            data.append(" ");
-            data.append(entry.getKey());
-            data.append("=\"");
-            data.append(entry.getValue());
-            data.append("\"");
-        }
+        StringBuilder builder = new StringBuilder();
 
-        data.append("\n");
-        data.append(envelope.getMessage());
-        data.append("---\n");
+        builder.append("SPLUNK-MESSAGE:");
+        appendKeyValue(builder, SOURCETYPE, key.getSourceType());
+        appendKeyValue(builder, SOURCE, key.getSource());
+        appendKeyValue(builder, HOST, key.getHost());
+        appendKeyValue(builder, TIMESTAMP, ISODateTimeFormat.dateTime().print(key.getTimestamp()));
+
+        builder.append("\n");
+        builder.append(message);
+        builder.append("\n---\n");
 
         try {
             OutputStreamWriter writer = getWriter();
-            writer.write(data.toString());
+            writer.write(builder.toString());
             writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void appendKeyValue(StringBuilder builder, String key, String value) {
+        builder.append(" ");
+        builder.append(key);
+        builder.append("=\"");
+        builder.append(value);
+        builder.append("\"");
     }
 
     @Override

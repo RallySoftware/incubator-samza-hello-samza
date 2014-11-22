@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.log4j;
+package samza.examples.appender;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -25,22 +25,26 @@ import kafka.producer.ProducerConfig;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
 
-import java.util.Map;
 import java.util.Properties;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static samza.examples.log4j.task.Log4JStreamTask.*;
-
 public class SamzaAppender extends AppenderSkeleton {
+    public static final String TOPIC = "log4j";
+
     private String brokerList;
-    private String sourceType;
-    private String source;
+    private String service;
     private String host;
 
-    private Producer<Map<String, String>, String> producer;
+    private Producer<Log4JKey, String> producer;
     private ProducerConfig producerConfig;
+
+    public String getService() {
+        return service;
+    }
+
+    public void setService(final String service) {
+        this.service = service;
+    }
 
     public String getBrokerList() {
         return brokerList;
@@ -48,22 +52,6 @@ public class SamzaAppender extends AppenderSkeleton {
 
     public void setBrokerList(String brokerList) {
         this.brokerList = brokerList;
-    }
-
-    public String getSourceType() {
-        return sourceType;
-    }
-
-    public void setSourceType(String sourceType) {
-        this.sourceType = sourceType;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
     }
 
     public String getHost() {
@@ -76,7 +64,7 @@ public class SamzaAppender extends AppenderSkeleton {
 
     @Override
     public boolean requiresLayout() {
-        return true;
+        return false;
     }
 
     @Override
@@ -84,8 +72,8 @@ public class SamzaAppender extends AppenderSkeleton {
         try {
             Properties producerProperties = new Properties();
             producerProperties.put("metadata.broker.list", brokerList);
+            producerProperties.put("key.serializer.class", "samza.examples.appender.serializer.Log4JEncoder");
             producerProperties.put("serializer.class", "kafka.serializer.StringEncoder");
-            producerProperties.put("key.serializer.class", "kafka.serializer.JsonEncoder");
             producerProperties.put("request.required.acks", "0");
 
             producerConfig = new ProducerConfig(producerProperties);
@@ -97,26 +85,27 @@ public class SamzaAppender extends AppenderSkeleton {
 
     @Override
     protected synchronized void append(LoggingEvent event) {
-        DateTime timestamp = DateTime.now();
-        Map<String, String> key = newHashMap();
-        key.put(SOURCETYPE, sourceType);
-        key.put(SOURCE, source);
-        key.put(HOST, host);
-        key.put(TIMESTAMP, ISODateTimeFormat.dateTime().print(timestamp));
-        String value = layout.format(event);
-        KeyedMessage<Map<String, String>, String> message = new KeyedMessage<Map<String, String>, String>(
-                TOPIC, key, value);
+        Log4JKey key = new Log4JKey();
+        key.setService(service);
+        key.setLog(event.getLoggerName());
+        key.setHost(host);
+        key.setTimestamp(new DateTime(event.getTimeStamp()));
+
+        String value = event.getRenderedMessage();
+
+        KeyedMessage<Log4JKey, String> message = new KeyedMessage<Log4JKey, String>(TOPIC, key, value);
         getProducer().send(message);
     }
 
     @Override
     public synchronized void close() {
         producer.close();
+        producer = null;
     }
 
-    private Producer<Map<String, String>, String> getProducer() {
+    private Producer<Log4JKey, String> getProducer() {
         if (producer == null) {
-            producer = new Producer<Map<String, String>, String>(producerConfig);
+            producer = new Producer<Log4JKey, String>(producerConfig);
         }
 
         return producer;

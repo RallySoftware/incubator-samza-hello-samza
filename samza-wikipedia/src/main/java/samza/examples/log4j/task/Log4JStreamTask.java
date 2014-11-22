@@ -25,21 +25,52 @@ import org.apache.samza.system.SystemStream;
 import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
+import samza.examples.influx.InfluxKey;
+import samza.examples.appender.Log4JKey;
+import samza.examples.splunk.SplunkKey;
 
 import java.util.Map;
 
-public class Log4JStreamTask implements StreamTask {
-    public static final String TOPIC = "application-logs";
+import static com.google.common.collect.Maps.newHashMap;
+import static samza.examples.appender.Log4JKey.HOST;
 
-    public static final String SOURCETYPE = "sourcetype";
-    public static final String SOURCE = "source";
-    public static final String HOST = "host";
-    public static final String TIMESTAMP = "timestamp";
+public class Log4JStreamTask implements StreamTask {
+    public static final String SPLUNK = "splunk";
+    public static final String STREAM = "log4j";
+    public static final String INFLUX = "influx";
+    public static final String MESSAGE = "message";
 
     @Override
     public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) {
-        SystemStream systemStream = new SystemStream("log4j", "all");
-        OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, envelope.getKey(), envelope.getMessage());
+        Log4JKey key = (Log4JKey) envelope.getKey();
+        String message = (String) envelope.getMessage();
+
+        splunk(key, message, collector, coordinator);
+        influx(key, message, collector, coordinator);
+    }
+
+    private void splunk(Log4JKey key, String message, MessageCollector collector, TaskCoordinator coordinator) {
+        SplunkKey splunkKey = new SplunkKey();
+        splunkKey.setSourceType(key.getService());
+        splunkKey.setSource(key.getLog());
+        splunkKey.setHost(key.getHost());
+        splunkKey.setTimestamp(key.getTimestamp());
+
+        SystemStream systemStream = new SystemStream(SPLUNK, STREAM);
+        OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, splunkKey, message);
+        collector.send(outgoingMessage);
+    }
+
+    private void influx(Log4JKey key, String message, MessageCollector collector, TaskCoordinator coordinator) {
+        InfluxKey influxKey = new InfluxKey();
+        influxKey.setTimestamp(key.getTimestamp());
+
+        Map<String, Object> influxValue = newHashMap();
+        influxValue.put(MESSAGE, message);
+        influxValue.put(HOST, key.getHost());
+
+        SystemStream systemStream = new SystemStream(INFLUX, String.format("%s.%s", key.getService(), key.getLog()));
+        OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, influxKey, influxValue);
         collector.send(outgoingMessage);
     }
 }

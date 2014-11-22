@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.yammer;
+package samza.examples.reporter;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
@@ -30,12 +30,12 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.collect.Maps.newHashMap;
-import static samza.examples.yammer.task.YammerStreamTask.*;
+import static samza.examples.reporter.YammerKey.*;
 
 public class SamzaReporter extends ScheduledReporter {
     private ProducerConfig producerConfig;
-    private List<KeyedMessage<Map<String, String>, Map<String, Object>>> messages;
-    private Producer<Map<String, String>, Map<String, Object>> producer;
+    private List<KeyedMessage<YammerKey, Map<String, Object>>> messages;
+    private Producer<YammerKey, Map<String, Object>> producer;
 
     public static Builder forRegistry(MetricRegistry registry) {
         return new Builder(registry);
@@ -94,13 +94,10 @@ public class SamzaReporter extends ScheduledReporter {
                          String brokerList) {
         super(registry, name, filter, rateUnit, durationUnit);
 
-        System.err.format("Creating Yammer Reporter\n");
-        System.err.flush();
-
         Properties producerProperties = new Properties();
         producerProperties.put("metadata.broker.list", brokerList);
+        producerProperties.put("key.serializer.class", "samza.examples.reporter.serializer.YammerEncoder");
         producerProperties.put("serializer.class", "kafka.serializer.JsonEncoder");
-        producerProperties.put("key.serializer.class", "kafka.serializer.JsonEncoder");
         producerProperties.put("request.required.acks", "0");
         producerConfig = new ProducerConfig(producerProperties);
     }
@@ -112,69 +109,69 @@ public class SamzaReporter extends ScheduledReporter {
                        SortedMap<String, Meter> meters,
                        SortedMap<String, Timer> timers) {
         try {
-            Map<String, String> key;
+            YammerKey key;
             Map<String, Object> value;
             DateTime timestamp = DateTime.now();
-            messages = new ArrayList<KeyedMessage<Map<String, String>, Map<String, Object>>>();
+            messages = new ArrayList<KeyedMessage<YammerKey, Map<String, Object>>>();
 
             for (Map.Entry<String, Gauge> entry : gauges.entrySet()) {
-                key = newHashMap();
-                key.put(NAME, entry.getKey());
-                key.put(TYPE, GAUGE);
+                key = new YammerKey();
+                key.setName(entry.getKey());
+                key.setType(GAUGE);
+                key.setTimestamp(timestamp);
 
                 value = newHashMap();
                 report(entry.getValue(), value);
-                value.put(TIME, timestamp.toInstant().getMillis());
 
-                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+                messages.add(new KeyedMessage<YammerKey, Map<String, Object>>(TOPIC, key, value));
             }
 
             for (Map.Entry<String, Counter> entry : counters.entrySet()) {
-                key = newHashMap();
-                key.put(NAME, entry.getKey());
-                key.put(TYPE, COUNTER);
+                key = new YammerKey();
+                key.setName(entry.getKey());
+                key.setType(COUNTER);
+                key.setTimestamp(timestamp);
 
                 value = newHashMap();
                 report(entry.getValue(), value);
-                value.put(TIME, timestamp.toInstant().getMillis());
 
-                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+                messages.add(new KeyedMessage<YammerKey, Map<String, Object>>(TOPIC, key, value));
             }
 
             for (Map.Entry<String, Histogram> entry : histograms.entrySet()) {
-                key = newHashMap();
-                key.put(NAME, entry.getKey());
-                key.put(TYPE, HISTOGRAM);
+                key = new YammerKey();
+                key.setName(entry.getKey());
+                key.setType(HISTOGRAM);
+                key.setTimestamp(timestamp);
 
                 value = newHashMap();
                 report(entry.getValue(), value);
-                value.put(TIME, timestamp.toInstant().getMillis());
 
-                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+                messages.add(new KeyedMessage<YammerKey, Map<String, Object>>(TOPIC, key, value));
             }
 
             for (Map.Entry<String, Meter> entry : meters.entrySet()) {
-                key = newHashMap();
-                key.put(NAME, entry.getKey());
-                key.put(TYPE, METER);
+                key = new YammerKey();
+                key.setName(entry.getKey());
+                key.setType(METER);
+                key.setTimestamp(timestamp);
 
                 value = newHashMap();
                 report(entry.getValue(), value);
-                value.put(TIME, timestamp.toInstant().getMillis());
 
-                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+                messages.add(new KeyedMessage<YammerKey, Map<String, Object>>(TOPIC, key, value));
             }
 
             for (Map.Entry<String, Timer> entry : timers.entrySet()) {
-                key = newHashMap();
-                key.put(NAME, entry.getKey());
-                key.put(TYPE, TIMER);
+                key = new YammerKey();
+                key.setName(entry.getKey());
+                key.setType(TIMER);
+                key.setTimestamp(timestamp);
 
                 value = newHashMap();
                 report(entry.getValue(), value);
-                value.put(TIME, timestamp.toInstant().getMillis());
 
-                messages.add(new KeyedMessage<Map<String, String>, Map<String, Object>>(TOPIC, key, value));
+                messages.add(new KeyedMessage<YammerKey, Map<String, Object>>(TOPIC, key, value));
             }
 
             getProducer().send(messages);
@@ -229,9 +226,9 @@ public class SamzaReporter extends ScheduledReporter {
         json.put(P_999, snapshot.get999thPercentile());
     }
 
-    private Producer<Map<String, String>, Map<String, Object>> getProducer() {
+    private Producer<YammerKey, Map<String, Object>> getProducer() {
         if (producer == null) {
-            producer = new Producer<Map<String, String>, Map<String, Object>>(producerConfig);
+            producer = new Producer<YammerKey, Map<String, Object>>(producerConfig);
         }
 
         return producer;

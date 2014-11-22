@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package samza.examples.yammer.system;
+package samza.examples.influx.system;
 
 import org.apache.samza.SamzaException;
 import org.apache.samza.config.Config;
@@ -28,7 +28,7 @@ import org.apache.samza.system.SystemFactory;
 import org.apache.samza.system.SystemProducer;
 import org.apache.samza.util.SinglePartitionWithoutOffsetsSystemAdmin;
 
-public class YammerSystemFactory implements SystemFactory {
+public class InfluxSystemFactory implements SystemFactory {
     @Override
     public SystemConsumer getConsumer(String systemName, Config config, MetricsRegistry registry) {
         throw new SamzaException("You can't consume from an Yammer feed!");
@@ -40,7 +40,7 @@ public class YammerSystemFactory implements SystemFactory {
         String username = config.get("systems." + systemName + ".username");
         String password = config.get("systems." + systemName + ".password");
         String database = config.get("systems." + systemName + ".database");
-        return new YammerSystemProducer(uri, username, password, database, 10);
+        return new InfluxSystemProducer(uri, username, password, database, 10);
     }
 
     @Override
