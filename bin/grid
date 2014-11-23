@@ -204,10 +204,12 @@ stop_kafka() {
 
 stop_influx() {
   # ???
+  echo
 }
 
 stop_splunk() {
   # ???
+  echo
 }
 
 # Check arguments
