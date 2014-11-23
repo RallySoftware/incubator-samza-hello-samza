@@ -159,7 +159,7 @@ start_influx() {
 start_splunk() {
   if [ -f /usr/bin/nc ]; then
     mkdir -p $DEPLOY_ROOT_DIR/$SYSTEM/logs
-    nohup /usr/bin/nc -lk 0.0.0.0 > $DEPLOY_ROOT_DIR/$SYSTEM/logs/splunk.log 2>&1 &
+    nohup /usr/bin/nc -lk 0.0.0.0 9998 > $DEPLOY_ROOT_DIR/$SYSTEM/logs/splunk.log 2>&1 &
   else
     echo 'Splunk is not installed. Run: bin/grid install splunk'
   fi
