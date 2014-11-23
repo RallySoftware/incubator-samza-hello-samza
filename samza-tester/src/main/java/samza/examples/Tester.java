@@ -58,7 +58,7 @@ public class Tester {
         org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger("samza.tester");
 
         while (true) {
-            int x = random.nextInt(1000);
+            int x = random.nextInt(100);
 
             testCounter.inc(x);
             testHistogram.update(x);
@@ -66,7 +66,7 @@ public class Tester {
 
             Context context = testTimer.time();
             try {
-                Thread.sleep(x + 10000);
+                Thread.sleep(x0);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
