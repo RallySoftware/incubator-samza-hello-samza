@@ -26,6 +26,7 @@ import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.joda.time.DateTime;
 
+import java.net.InetAddress;
 import java.util.Properties;
 
 public class SamzaAppender extends AppenderSkeleton {
@@ -77,6 +78,10 @@ public class SamzaAppender extends AppenderSkeleton {
             producerProperties.put("request.required.acks", "0");
 
             producerConfig = new ProducerConfig(producerProperties);
+
+            if (host == null || "".equals(host)) {
+                host = InetAddress.getLocalHost().getHostName();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
