@@ -42,7 +42,7 @@ public class Tester {
                                               .named("samza-tester")
                                               .withBrokerList("localhost:9092")
                                               .build();
-        reporter.start(500, TimeUnit.MILLISECONDS);
+        reporter.start(15, TimeUnit.SECONDS);
 
         metrics.register("test-gauge", new Gauge<Integer>() {
             @Override
@@ -58,7 +58,7 @@ public class Tester {
         org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger("samza.tester");
 
         while (true) {
-            int x = random.nextInt(100);
+            int x = random.nextInt(1000);
 
             testCounter.inc(x);
             testHistogram.update(x);
@@ -66,7 +66,7 @@ public class Tester {
 
             Context context = testTimer.time();
             try {
-                Thread.sleep(x);
+                Thread.sleep(x + 10000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

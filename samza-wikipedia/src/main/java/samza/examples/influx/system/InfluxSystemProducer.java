@@ -61,15 +61,20 @@ public class InfluxSystemProducer implements SystemProducer {
     }
 
     @Override
-    public void register(String serie) {
-        if (!series.containsKey(serie)) {
-            series.put(serie, new ArrayList<OutgoingMessageEnvelope>());
-        }
+    public void register(String source) {
     }
 
     @Override
     public void send(String source, OutgoingMessageEnvelope envelope) {
-        List<OutgoingMessageEnvelope> serie = series.get(source);
+        InfluxKey key = (InfluxKey) envelope.getKey();
+        List<OutgoingMessageEnvelope> serie = series.get(key.getSerie());
+
+        if (serie == null) {
+            serie = new ArrayList<OutgoingMessageEnvelope>();
+            series.put(key.getSerie(), serie);
+
+        }
+
         serie.add(envelope);
 
         if (serie.size() >= bufferSize) {
@@ -78,36 +83,39 @@ public class InfluxSystemProducer implements SystemProducer {
     }
 
     @Override
-    public void flush(String serieName) {
-        Set<String> columnSet = newHashSet();
-        List<OutgoingMessageEnvelope> serie = series.get(serieName);
+    public void flush(String source) {
+        for (Map.Entry<String, List<OutgoingMessageEnvelope>> entry : series.entrySet()) {
+            String serieName = entry.getKey();
+            Set<String> columnSet = newHashSet();
+            List<OutgoingMessageEnvelope> serie = entry.getValue();
 
-        for (OutgoingMessageEnvelope envelope : serie) {
-            Map<String, Object> value = (Map<String, Object>) envelope.getMessage();
-            columnSet.addAll(value.keySet());
-        }
-
-        Serie.Builder builder = new Serie.Builder(serieName);
-        List<String> columnNames = newArrayList(columnSet);
-        builder.columns(columnNames.toArray(new String[columnNames.size()]));
-
-        for (OutgoingMessageEnvelope envelope : serie) {
-            InfluxKey key = (InfluxKey) envelope.getKey();
-            Map<String, Object> value = (Map<String, Object>) envelope.getMessage();
-
-            List<Object> values = newArrayList();
-            for (String column : columnSet) {
-                if (TIME.equals(column)) {
-                    values.add(key.getTimestamp().getMillis());
-                } else {
-                    values.add(value.get(column));
-                }
+            for (OutgoingMessageEnvelope envelope : serie) {
+                Map<String, Object> value = (Map<String, Object>) envelope.getMessage();
+                columnSet.addAll(value.keySet());
             }
 
-            builder.values(values.toArray(new Object[values.size()]));
-        }
+            Serie.Builder builder = new Serie.Builder(serieName);
+            List<String> columnNames = newArrayList(columnSet);
+            builder.columns(columnNames.toArray(new String[columnNames.size()]));
 
-        connection.write(database, TimeUnit.MILLISECONDS, builder.build());
-        serie.clear();
+            for (OutgoingMessageEnvelope envelope : serie) {
+                InfluxKey key = (InfluxKey) envelope.getKey();
+                Map<String, Object> value = (Map<String, Object>) envelope.getMessage();
+
+                List<Object> values = newArrayList();
+                for (String column : columnSet) {
+                    if (TIME.equals(column)) {
+                        values.add(key.getTimestamp().getMillis());
+                    } else {
+                        values.add(value.get(column));
+                    }
+                }
+
+                builder.values(values.toArray(new Object[values.size()]));
+            }
+
+            connection.write(database, TimeUnit.MILLISECONDS, builder.build());
+            serie.clear();
+        }
     }
 }

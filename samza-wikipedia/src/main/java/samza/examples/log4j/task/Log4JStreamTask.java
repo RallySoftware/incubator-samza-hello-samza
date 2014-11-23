@@ -63,13 +63,14 @@ public class Log4JStreamTask implements StreamTask {
 
     private void influx(Log4JKey key, String message, MessageCollector collector, TaskCoordinator coordinator) {
         InfluxKey influxKey = new InfluxKey();
+        influxKey.setSerie(String.format("%s.%s", key.getService(), key.getLog()));
         influxKey.setTimestamp(key.getTimestamp());
 
         Map<String, Object> influxValue = newHashMap();
         influxValue.put(MESSAGE, message);
         influxValue.put(HOST, key.getHost());
 
-        SystemStream systemStream = new SystemStream(INFLUX, String.format("%s.%s", key.getService(), key.getLog()));
+        SystemStream systemStream = new SystemStream(INFLUX, "log4j");
         OutgoingMessageEnvelope outgoingMessage = new OutgoingMessageEnvelope(systemStream, influxKey, influxValue);
         collector.send(outgoingMessage);
     }

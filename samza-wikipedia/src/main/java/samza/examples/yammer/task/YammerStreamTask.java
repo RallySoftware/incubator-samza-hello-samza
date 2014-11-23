@@ -31,15 +31,19 @@ import samza.examples.reporter.YammerKey;
 import java.util.Map;
 
 public class YammerStreamTask implements StreamTask {
+
+    public static final String INFLUX = "influx";
+
     @Override
     public void process(IncomingMessageEnvelope envelope, MessageCollector collector, TaskCoordinator coordinator) {
         YammerKey key = (YammerKey) envelope.getKey();
         Map<String, Object> message = (Map<String, Object>) envelope.getMessage();
 
         InfluxKey influxKey = new InfluxKey();
+        influxKey.setSerie(key.getName());
         influxKey.setTimestamp(key.getTimestamp());
 
-        SystemStream systemStream = new SystemStream("influx", key.getName());
+        SystemStream systemStream = new SystemStream(INFLUX, "yammer");
         OutgoingMessageEnvelope outgoingMessageEnvelope = new OutgoingMessageEnvelope(systemStream,
                                                                                       influxKey,
                                                                                       message);

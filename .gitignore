@@ -28,3 +28,4 @@ target/
 */.cache
 deploy
 *.log
+nohup.out
