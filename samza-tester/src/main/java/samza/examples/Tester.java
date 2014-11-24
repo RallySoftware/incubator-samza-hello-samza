@@ -66,7 +66,7 @@ public class Tester {
 
             Context context = testTimer.time();
             try {
-                Thread.sleep(x0);
+                Thread.sleep(x);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
