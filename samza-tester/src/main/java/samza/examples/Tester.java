@@ -21,6 +21,7 @@ package samza.examples;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer.Context;
+import org.apache.samza.config.factories.PropertiesConfigFactory;
 import samza.examples.reporter.SamzaReporter;
 
 import java.util.Random;
@@ -56,6 +57,8 @@ public class Tester {
         Meter testMeter = metrics.meter("test-meter");
 
         org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger("samza.tester");
+
+        PropertiesConfigFactory
 
         while (true) {
             int x = random.nextInt(100);

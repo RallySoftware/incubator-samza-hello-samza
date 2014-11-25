@@ -38,6 +38,7 @@ SYSTEM=$2
 DOWNLOAD_KAFKA=http://www.us.apache.org/dist/kafka/0.8.1.1/kafka_2.9.2-0.8.1.1.tgz
 DOWNLOAD_YARN=https://archive.apache.org/dist/hadoop/common/hadoop-2.2.0/hadoop-2.2.0.tar.gz
 DOWNLOAD_ZOOKEEPER=http://archive.apache.org/dist/zookeeper/zookeeper-3.4.3/zookeeper-3.4.3.tar.gz
+DOWNLOAD_ELASTICSEARCH=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.0.tar.gz
 
 bootstrap() {
   echo "Bootstrapping the system..."
@@ -54,6 +55,7 @@ install_all() {
   $DIR/grid install yarn
   $DIR/grid install kafka
   $DIR/grid install influx
+  $DIR/grid install elasticsearch
   $DIR/grid install splunk
 }
 
@@ -85,6 +87,10 @@ install_influx() {
   brew install influxdb
 }
 
+install_elasticsearch() {
+  install elasticsearch $DOWNLOAD_ELASTICSEARCH elasticsearch-1.4.0
+}
+
 install_splunk() {
   echo
 }
@@ -114,6 +120,7 @@ start_all() {
   $DIR/grid start yarn
   $DIR/grid start kafka
   $DIR/grid start influx
+  $DIR/grid start elasticsearch
   $DIR/grid start splunk
 }
 
@@ -153,6 +160,17 @@ start_influx() {
     nohup /usr/local/bin/influxdb -config /usr/local/etc/influxdb.conf > $DEPLOY_ROOT_DIR/$SYSTEM/logs/influx.log 2>&1 &
   else
     echo 'InfluxDB is not installed. Run: bin/grid install influx'
+  fi
+}
+
+start_elasticsearch() {
+  if [ -f $DEPLOY_ROOT_DIR/$SYSTEM/bin/kafka-server-start.sh ]; then
+    mkdir -p $DEPLOY_ROOT_DIR/$SYSTEM/logs
+    cd $DEPLOY_ROOT_DIR/$SYSTEM
+    nohup bin/elasticsearch > logs/elasticsearch.log 2>&1 &
+    cd - > /dev/null
+  else
+    echo 'ElasticSearch is not installed. Run: bin/grid install elasticsearch'
   fi
 }
 
@@ -207,6 +225,11 @@ stop_influx() {
   echo
 }
 
+stop_elasticsearch() {
+  # ???
+  echo
+}
+
 stop_splunk() {
   # ???
   echo
@@ -223,9 +246,9 @@ elif (test -z "$COMMAND" && test -z "$SYSTEM") \
   echo
   echo "  $ grid"
   echo "  $ grid bootstrap"
-  echo "  $ grid install [yarn|kafka|zookeeper|influx|all]"
-  echo "  $ grid start [yarn|kafka|zookeeper|influx|all]"
-  echo "  $ grid stop [yarn|kafka|zookeeper|influx|all]"
+  echo "  $ grid install [yarn|kafka|zookeeper|influx|elasticsearch|all]"
+  echo "  $ grid start [yarn|kafka|zookeeper|influx|elasticsearch|all]"
+  echo "  $ grid stop [yarn|kafka|zookeeper|influx|elasticsearch|all]"
   echo
   exit 1
 else
