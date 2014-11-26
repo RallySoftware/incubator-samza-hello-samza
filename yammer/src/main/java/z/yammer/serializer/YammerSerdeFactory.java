@@ -2,7 +2,7 @@ package z.yammer.serializer;
 
 import org.apache.samza.config.Config;
 import org.apache.samza.serializers.SerdeFactory;
-import samza.examples.reporter.YammerKey;
+import z.reporter.YammerKey;
 
 public class YammerSerdeFactory implements SerdeFactory<YammerKey> {
     @Override

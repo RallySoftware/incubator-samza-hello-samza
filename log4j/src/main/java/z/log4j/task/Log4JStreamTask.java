@@ -25,14 +25,14 @@ import org.apache.samza.system.SystemStream;
 import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
-import samza.examples.influx.InfluxKey;
-import samza.examples.appender.Log4JKey;
-import samza.examples.splunk.SplunkKey;
+import z.appender.Log4JKey;
+import z.influx.InfluxKey;
+import z.splunk.SplunkKey;
 
 import java.util.Map;
 
 import static com.google.common.collect.Maps.newHashMap;
-import static samza.examples.appender.Log4JKey.HOST;
+import static z.appender.Log4JKey.HOST;
 
 public class Log4JStreamTask implements StreamTask {
     public static final String SPLUNK = "splunk";

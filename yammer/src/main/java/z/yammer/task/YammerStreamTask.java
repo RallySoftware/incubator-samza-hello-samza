@@ -25,8 +25,8 @@ import org.apache.samza.system.SystemStream;
 import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
-import samza.examples.influx.InfluxKey;
-import samza.examples.reporter.YammerKey;
+import z.influx.InfluxKey;
+import z.reporter.YammerKey;
 
 import java.util.Map;
 

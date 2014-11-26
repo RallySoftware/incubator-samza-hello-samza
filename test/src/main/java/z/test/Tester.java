@@ -21,8 +21,7 @@ package z.test;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer.Context;
-import org.apache.samza.config.factories.PropertiesConfigFactory;
-import samza.examples.reporter.SamzaReporter;
+import samza.examples.yammer.SamzaReporter;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;

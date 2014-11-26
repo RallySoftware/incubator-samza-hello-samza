@@ -4,14 +4,14 @@ import org.apache.samza.config.Config;
 import org.apache.samza.serializers.JsonSerde;
 import org.apache.samza.serializers.Serde;
 import org.joda.time.format.ISODateTimeFormat;
-import samza.examples.reporter.YammerKey;
+import z.reporter.YammerKey;
 
 import java.util.Map;
 
 import static com.google.common.collect.Maps.newHashMap;
-import static samza.examples.reporter.YammerKey.NAME;
-import static samza.examples.reporter.YammerKey.TIMESTAMP;
-import static samza.examples.reporter.YammerKey.TYPE;
+import static z.reporter.YammerKey.NAME;
+import static z.reporter.YammerKey.TIMESTAMP;
+import static z.reporter.YammerKey.TYPE;
 
 public class YammerSerde implements Serde<YammerKey> {
     private JsonSerde jsonSerde;

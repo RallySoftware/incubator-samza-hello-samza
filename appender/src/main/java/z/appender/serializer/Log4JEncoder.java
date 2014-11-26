@@ -1,10 +1,10 @@
 package z.appender.serializer;
 
 import kafka.serializer.Encoder;
-import kafka.serializer.JsonEncoder;
 import kafka.utils.VerifiableProperties;
 import org.joda.time.format.ISODateTimeFormat;
 import z.appender.Log4JKey;
+import z.kafka.serializer.JsonEncoder;
 
 import java.util.Map;
 

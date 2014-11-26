@@ -4,12 +4,12 @@ import org.apache.samza.config.Config;
 import org.apache.samza.serializers.JsonSerde;
 import org.apache.samza.serializers.Serde;
 import org.joda.time.format.ISODateTimeFormat;
-import samza.examples.appender.Log4JKey;
+import z.appender.Log4JKey;
 
 import java.util.Map;
 
 import static com.google.common.collect.Maps.newHashMap;
-import static samza.examples.appender.Log4JKey.*;
+import static z.appender.Log4JKey.*;
 
 public class Log4JSerde implements Serde<Log4JKey> {
 

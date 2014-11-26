@@ -10,7 +10,7 @@ import org.apache.samza.task.TaskCoordinator;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Serie;
-import samza.examples.flowdock.FlowdockKey;
+import z.flowdock.FlowdockKey;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

@@ -1,9 +1,9 @@
 package z.reporter.serializer;
 
 import kafka.serializer.Encoder;
-import kafka.serializer.JsonEncoder;
 import kafka.utils.VerifiableProperties;
 import org.joda.time.format.ISODateTimeFormat;
+import z.kafka.serializer.JsonEncoder;
 import z.reporter.YammerKey;
 
 import java.util.Map;

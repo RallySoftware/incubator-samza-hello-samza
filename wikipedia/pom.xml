@@ -24,11 +24,12 @@ under the License.
     <parent>
         <groupId>z</groupId>
         <artifactId>parent</artifactId>
-        <version>0.0.1</version>
+        <version>${z.version}</version>
     </parent>
 
     <artifactId>wikipedia</artifactId>
     <name>Wikipedia Example</name>
+    <version>${z.version}</version>
     <packaging>jar</packaging>
 
     <dependencies>
