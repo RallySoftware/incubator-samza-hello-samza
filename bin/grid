@@ -164,13 +164,13 @@ start_influx() {
 }
 
 start_elasticsearch() {
-  if [ -f $DEPLOY_ROOT_DIR/$SYSTEM/bin/kafka-server-start.sh ]; then
+  if [ -f $DEPLOY_ROOT_DIR/$SYSTEM/bin/elasticsearch ]; then
     mkdir -p $DEPLOY_ROOT_DIR/$SYSTEM/logs
     cd $DEPLOY_ROOT_DIR/$SYSTEM
     nohup bin/elasticsearch > logs/elasticsearch.log 2>&1 &
     cd - > /dev/null
   else
-    echo 'ElasticSearch is not installed. Run: bin/grid install elasticsearch'
+    echo 'Elasticsearch is not installed. Run: bin/grid install elasticsearch'
   fi
 }
 

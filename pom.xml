@@ -25,15 +25,13 @@ under the License.
         <maven>3.0.0</maven>
     </prerequisites>
 
-    <groupId>samza</groupId>
-    <artifactId>samza-example-parent</artifactId>
-    <version>0.7.0</version>
+    <groupId>z</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.0.1</version>
     <packaging>pom</packaging>
-    <name>Samza Parent</name>
-    <description>
-        Samza is a stream processing system. Think of it as Map-Reduce for streams.
-    </description>
-    <url>https://github.com/linkedin/hello-samza</url>
+    <name>Z</name>
+    <description>Z</description>
+    <url>https://github.com/rallysoftware/z</url>
 
     <dependencyManagement>
         <dependencies>
@@ -119,16 +117,24 @@ under the License.
     </properties>
 
     <modules>
-        <module>samza-job-package</module>
-        <module>samza-wikipedia</module>
-        <module>samza-tester</module>
+        <module>appender</module>
+        <module>dump</module>
+        <module>flowdock</module>
+        <module>influx</module>
+        <module>jarvis</module>
+        <module>kafka</module>
+        <module>log4j</module>
+        <module>reporter</module>
+        <module>splunk</module>
+        <module>test</module>
+        <module>wikipedia</module>
+        <module>yammer</module>
     </modules>
 
     <developers>
         <developer>
-            <name>Chris Riccomini</name>
-            <email>criccomini@gmail.com</email>
-            <timezone>-8</timezone>
+            <name>Jonathan Bryant</name>
+            <email>jbryant@rallydev.com</email>
         </developer>
     </developers>
 
@@ -141,14 +147,14 @@ under the License.
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/linkedin/hello-samza.git</connection>
-        <developerConnection>scm:git:git@github.com:linkedin/hello-samza.git</developerConnection>
-        <url>http://github.com/linkedin/hello-samza/</url>
+        <connection>scm:git:git://github.com/rallysoftware/z.git</connection>
+        <developerConnection>scm:git:git@github.com:rallysoftware/z.git</developerConnection>
+        <url>http://github.com/rallysoftware/z/</url>
     </scm>
 
     <issueManagement>
         <system>github</system>
-        <url>http://github.com/linkedin/hello-samza/issues</url>
+        <url>http://github.com/rallysoftware/z/issues</url>
     </issueManagement>
 
     <repositories>
@@ -157,15 +163,10 @@ under the License.
             <url>file://${user.home}/.m2/repository</url>
         </repository>
         <repository>
-            <id>apache-releases</id>
-            <url>https://repository.apache.org/content/groups/public</url>
-        </repository>
-        <repository>
             <id>scala-tools.org</id>
             <name>Scala-tools Maven2 Repository</name>
             <url>https://oss.sonatype.org/content/groups/scala-tools</url>
         </repository>
-        <!-- for zkclient -->
         <repository>
             <id>sonatype</id>
             <url>http://oss.sonatype.org/content/groups/public</url>
